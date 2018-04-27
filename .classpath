@@ -27,14 +27,5 @@
 			<attribute name="maven.pomderived" value="true"/>
 		</attributes>
 	</classpathentry>
-	<classpathentry kind="lib" path="/home/sapient/.m2/repository/io/swagger/swagger-annotations/1.5.10/swagger-annotations-1.5.10.jar" sourcepath="/home/sapient/.m2/repository/io/swagger/swagger-annotations/1.5.10/swagger-annotations-1.5.10-sources.jar">
-		<attributes>
-			<attribute name="maven.pomderived" value="true"/>
-			<attribute name="maven.groupId" value="io.swagger"/>
-			<attribute name="maven.artifactId" value="swagger-annotations"/>
-			<attribute name="maven.version" value="1.5.10"/>
-			<attribute name="maven.scope" value="compile"/>
-		</attributes>
-	</classpathentry>
 	<classpathentry kind="output" path="target/classes"/>
 </classpath>

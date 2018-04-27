@@ -30,6 +30,7 @@ import com.kkd.userdetailsservice.model.AddressBean;
 import com.kkd.userdetailsservice.model.BankDetailsBean;
 import com.kkd.userdetailsservice.model.CustomerBean;
 import com.kkd.userdetailsservice.model.FarmerBean;
+import com.kkd.userdetailsservice.model.PasswordChangeBean;
 import com.kkd.userdetailsservice.repository.CustomerRepository;
 import com.kkd.userdetailsservice.repository.FarmerRepository;
 import com.kkd.userdetailsservice.service.MessageSenderService;
@@ -40,7 +41,6 @@ import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoCursor;
 import com.mongodb.client.MongoDatabase;
 import com.netflix.hystrix.contrib.javanica.annotation.HystrixCommand;
-import com.netflix.loadbalancer.Server;
 
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -49,7 +49,7 @@ import io.swagger.annotations.ApiResponses;
 
 @CrossOrigin
 @RestController
-@Api(value = "asigning token", tags = "Operations for interacting with kkdDb database")
+@Api(value = "Users Database handler", tags = "Operations for interacting with kkdDb database")
 public class UserController {
 
 	@Autowired
@@ -68,8 +68,8 @@ public class UserController {
 
 	MongoClient mongoClient;
 	MongoDatabase database;
-	MongoCollection<Document> collection=null;
-    MongoCursor cursor;
+	MongoCollection<Document> collection = null;
+	MongoCursor cursor;
 	MongoOperations mongoOps;
 
 	/* update details of a farmer using id */
@@ -82,12 +82,14 @@ public class UserController {
 	@PutMapping("/farmer/update/user/{id}")
 	public ResponseEntity<FarmerBean> updateFarmer(@RequestBody FarmerBean farmer, @PathVariable String id) {
 		logger.info("{}", "finding farmer with :farmer id : " + id);
-		if (farmerRepository.findById(id).isPresent()) {
-			System.out.println("=---------------------------------------------------------------------------------------");
+		Optional<FarmerBean> findById = farmerRepository.findById(id);
+		if (findById.isPresent()) {
 			logger.info("{}", "saving the farmer with id : " + id);
 			this.sendMsg("saving the farmer with id : " + id);
+			farmer.setPassword(findById.get().getPassword());
 			FarmerBean savedFarmer = farmerRepository.save(farmer);
 			logger.info("{}", "farmer saved with :farmer id : " + id);
+			savedFarmer.setPassword(null);
 			return ResponseEntity.status(HttpStatus.ACCEPTED).body(savedFarmer);
 		}
 		logger.info("{}", "farmer is not successfully saved with :farmer id : " + id);
@@ -115,9 +117,11 @@ public class UserController {
 		logger.info("{}", "finding customer with :customer id : " + id);
 		if (customerRepository.findById(id).isPresent()) {
 			logger.info("{}", "saving the customer with id : " + id);
+			customer.setPassword(customerRepository.findById(id).get().getPassword());
 			CustomerBean savedCustomer = customerRepository.save(customer);
 			this.sendMsg("updating the customer with id : " + id);
 			logger.info("{}", "customer updated with :customer id : " + id);
+			savedCustomer.setPassword(null);
 			return ResponseEntity.status(HttpStatus.ACCEPTED).body(savedCustomer);
 		}
 		logger.info("{}", "customer is not successfully saved with :farmer id : " + id);
@@ -143,6 +147,7 @@ public class UserController {
 		Optional<CustomerBean> findById = customerRepository.findById(customer_id);
 		this.sendMsg("obtaining the customer with id : " + customer_id);
 		System.out.println(findById);
+		findById.get().setPassword(null);
 		return ResponseEntity.status(HttpStatus.OK).body(findById);
 	}
 
@@ -150,7 +155,7 @@ public class UserController {
 	public ResponseEntity<Optional<CustomerBean>> retreiveCustomerByIdfallback(String customer_id) {
 		logger.info("{}", "fallback method executing for retrieving customer details with id : " + customer_id);
 		return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Optional.of(new CustomerBean("kkdCust1001",
-				"mobileNo", "password", "firstName", "lastName", null, null, "customer",null)));
+				"mobileNo", "password", "firstName", "lastName", null, null, "customer", null)));
 	}
 
 	/* return farmer details corresponding to the id provided */
@@ -165,14 +170,15 @@ public class UserController {
 		logger.info("{}", "retrieving farmer details with id : " + farmer_id);
 		Optional<FarmerBean> findById = farmerRepository.findById(farmer_id);
 		this.sendMsg("obtaining the farmer with id : " + farmer_id);
+		findById.get().setPassword(null);
 		return ResponseEntity.status(HttpStatus.OK).body(findById);
 	}
 
 	/* fallback method retrieving farmer details by provided id */
 	public ResponseEntity<Optional<FarmerBean>> retreiveFarmerByIdfallback(String farmer_id) {
 		logger.info("{}", "fallback method executing for retrieving farmer details with id : " + farmer_id);
-		return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Optional.of(new FarmerBean("fallback",
-				"6546163146", "trewygdh", "hjdkif", null, null, null, true, null, "farmer", null)));
+		return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Optional.of(new FarmerBean("fallback", "6546163146",
+				"trewygdh", "hjdkif", null, null, null, true, null, "farmer", null)));
 	}
 
 	/* return customer details corresponding to the mobile number provided */
@@ -187,6 +193,7 @@ public class UserController {
 		logger.info("{}", "retrieving customer details with mobile number : " + mobileNo);
 		Optional<CustomerBean> findByMobile = customerRepository.findByMobileNo(mobileNo);
 		this.sendMsg("obtaining the customer with mobile number : " + mobileNo);
+		findByMobile.get().setPassword(null);
 		return ResponseEntity.status(HttpStatus.OK).body(findByMobile);
 	}
 
@@ -199,7 +206,7 @@ public class UserController {
 				+ " mobile : " + mobileNo);
 
 		return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Optional.of(new CustomerBean("kkdCust1001",
-				"mobileNo", "password", "firstName", "lastName", null, null, "customer",null)));
+				"mobileNo", "password", "firstName", "lastName", null, null, "customer", null)));
 	}
 
 	/* return farmer details corresponding to the mobile number provided */
@@ -214,6 +221,7 @@ public class UserController {
 		logger.info("{}", "retrieving farmer details with mobile number : " + mobileNo);
 		Optional<FarmerBean> findByMobile = farmerRepository.findByMobileNo(mobileNo);
 		this.sendMsg("obtaining the farmer with mobile number : " + mobileNo);
+		findByMobile.get().setPassword(null);
 		return ResponseEntity.status(HttpStatus.OK).body(findByMobile);
 	}
 
@@ -233,25 +241,31 @@ public class UserController {
 			@ApiResponse(code = 403, message = "Accessing the resource you were trying to reach is forbidden"),
 			@ApiResponse(code = 404, message = "The resource you were trying to reach is not found") })
 	@HystrixCommand(fallbackMethod = "deleteCustomerfallback")
-	@DeleteMapping("/customer/{customer_id}")
-	public ResponseEntity<CustomerBean> deleteCustomer(@PathVariable String customer_id) {
-		logger.info("{}", "retrieving customer details with id : " + customer_id);
-		Optional<CustomerBean> findByMobile = customerRepository.findById(customer_id);
+	@PutMapping("/customer")
+	public ResponseEntity<Boolean> deleteCustomer(@RequestBody CustomerBean customer) {
+		System.out.println("________________________________________");
+		logger.info("{}", "retrieving customer details with mobile number : " + customer.getMobileNo());
+		Optional<CustomerBean> findByMobile = customerRepository.findByMobileNo(customer.getMobileNo());
 		if (findByMobile.isPresent()) {
-			logger.info("{}", "deleting customer details with id : " + customer_id);
-			this.sendMsg("deleting the customer with id : " + customer_id);
-			customerRepository.delete(findByMobile.get());
-			logger.info("{}", "customer deleted with id : " + customer_id);
-			return ResponseEntity.status(HttpStatus.ACCEPTED).body(findByMobile.get());
+			System.out.println("lllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllll");
+			this.sendMsg("deleting the customer with mobile number : " + customer.getMobileNo());
+			if(findByMobile.get().getPassword().equals(customer.getPassword())) {
+				customerRepository.delete(findByMobile.get());
+				logger.info("{}", "customer deleted with mobile number : " + customer.getMobileNo());
+				return ResponseEntity.status(HttpStatus.OK).body(true);
+			}
+			System.out.println("000000000000000000000000000000000000000");
+			return ResponseEntity.status(HttpStatus.OK).body(false);
 		}
-		logger.info("{}", "conflict in deleting customer with id : " + customer_id);
-		return ResponseEntity.status(HttpStatus.CONFLICT).body(null);
+		System.out.println("________________________________________++++++++++)))))))))))))))))))");
+		logger.info("{}", "customer is not present with mobileNumber : " + customer.getMobileNo());
+		return ResponseEntity.status(HttpStatus.NO_CONTENT).body(false);
 	}
 
 	/* fallback method for deleting a customer profile */
-	public ResponseEntity<CustomerBean> deleteCustomerfallback(String customer_id) {
-		logger.info("{}", "fallback method executing for deleting customer details with id  :" + customer_id);
-		return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
+	public ResponseEntity<Boolean> deleteCustomerfallback(@RequestBody CustomerBean customer) {
+		logger.info("{}", "fallback method executing for deleting customer details with mobile  :" + customer.getMobileNo());
+		return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(false);
 	}
 
 	/* farmer is provided with functionality to delete his account */
@@ -280,28 +294,6 @@ public class UserController {
 	public ResponseEntity<FarmerBean> deleteFarmerfallback(String farmer_id) {
 		logger.info("{}", "fallback method executing for deleting farmer details with id  :" + farmer_id);
 		return ResponseEntity.status(HttpStatus.CONFLICT).body(null);
-	}
-
-	/* user is provided with list of farmers having location provided */
-	@ApiOperation(value = "To get farmer's detail by location")
-	@ApiResponses(value = { @ApiResponse(code = 200, message = "Successfully got the farmer details"),
-			@ApiResponse(code = 401, message = "You are not authorized to view the resource"),
-			@ApiResponse(code = 403, message = "Accessing the resource you were trying to reach is forbidden"),
-			@ApiResponse(code = 404, message = "The resource you were trying to reach is not found") })
-	@HystrixCommand(fallbackMethod = "getFarmerBylocationfallback")
-	@GetMapping("/farmer/location/{location}")
-	public List<FarmerBean> getFarmerBylocation(@PathVariable String location) {
-		logger.info("{}", "getting list of all farmers with location :" + location);
-		this.sendMsg("getting the list of all farmers with location : " + location);
-		return farmerRepository.findAllByCities(location);
-	}
-
-	/* fallback method for getting list of farmers by specific location */
-	public List<FarmerBean> getFarmerBylocationfallback(String location) {
-		logger.info("{}", "fallback method executing for getting list of all farmers with location :" + location);
-		FarmerBean farmer = new FarmerBean("kkdFarm1001", "9865453256", "pass1234", "5645612122", null, null, "active",
-				true, null, "farmer", null);
-		return Arrays.asList(farmer);
 	}
 
 	/* farmer can update the addresses by providing mobile number */
@@ -379,20 +371,20 @@ public class UserController {
 	@PutMapping("farmer/{id}")
 	public ResponseEntity<FarmerBean> farmerDetailsUpdated(@PathVariable String id,
 			@RequestBody Map<String, Object> details) {
-		String mongoUrl="mongodb://10.151.60.164:27017";
-        String dbName="kkdDb";
-        try {
-            mongoClient = new MongoClient(new MongoClientURI(mongoUrl));
-            database = mongoClient.getDatabase(dbName);
-            collection = database.getCollection("farmer");
-        } catch (MongoException | ClassCastException e) {
-            this.sendMsg(
-                    "could not connect to the database or class caste exception occured while adding soundex code");
-        }
-		
+		String mongoUrl = "mongodb://10.151.60.164:27017";
+		String dbName = "kkdDb";
+		try {
+			mongoClient = new MongoClient(new MongoClientURI(mongoUrl));
+			database = mongoClient.getDatabase(dbName);
+			collection = database.getCollection("farmer");
+		} catch (MongoException | ClassCastException e) {
+			this.sendMsg(
+					"could not connect to the database or class caste exception occured while adding soundex code");
+		}
+
 		MongoTemplate mongo = new MongoTemplate(mongoClient, "kkdDb");
 		MongoOperations mongoOps = mongo;
-		
+
 		Query query = new Query(Criteria.where("kkdFarmId").is(id));
 		Update update = new Update();
 		Set<String> fields = details.keySet();
@@ -434,20 +426,20 @@ public class UserController {
 	@PutMapping("customer/{id}")
 	public ResponseEntity<CustomerBean> customerDetailsUpdated(@PathVariable String id,
 			@RequestBody Map<String, String> details) {
-		String mongoUrl="mongodb://10.151.60.164:27017";
-        String dbName="kkdDb";
-        try {
-            mongoClient = new MongoClient(new MongoClientURI(mongoUrl));
-            database = mongoClient.getDatabase(dbName);
-            collection = database.getCollection("customersublim");
-        } catch (MongoException | ClassCastException e) {
-            this.sendMsg(
-                    "could not connect to the database or class caste exception occured while adding soundex code");
-        }
-		
+		String mongoUrl = "mongodb://10.151.60.164:27017";
+		String dbName = "kkdDb";
+		try {
+			mongoClient = new MongoClient(new MongoClientURI(mongoUrl));
+			database = mongoClient.getDatabase(dbName);
+			collection = database.getCollection("customersublim");
+		} catch (MongoException | ClassCastException e) {
+			this.sendMsg(
+					"could not connect to the database or class caste exception occured while adding soundex code");
+		}
+
 		MongoTemplate mongo = new MongoTemplate(mongoClient, "kkdDb");
 		MongoOperations mongoOps = mongo;
-		
+
 		Query query = new Query(Criteria.where("kkdCustId").is(id));
 		Update update = new Update();
 		Set<String> fields = details.keySet();
@@ -498,6 +490,7 @@ public class UserController {
 			logger.info("{}", "updating farmer bank account details with id : " + id);
 			FarmerBean updatedFarmer = farmerRepository.save(farmer);
 			logger.info("{}", "farmer bank account details updated with id : " + id);
+			updatedFarmer.setPassword(null);
 			return ResponseEntity.status(HttpStatus.ACCEPTED).body(updatedFarmer);
 		}
 		logger.info("{}", "conflict in saving farmer bank account details with id : " + id);
@@ -505,8 +498,7 @@ public class UserController {
 	}
 
 	/* fallback method for updating farmer account details */
-	public ResponseEntity<CustomerBean> farmerAccountDetailsUpdatedFallback(String id,
-			BankDetailsBean bankDetailsBean) {
+	public ResponseEntity<FarmerBean> farmerAccountDetailsUpdatedFallback(String id, BankDetailsBean bankDetailsBean) {
 		logger.info("{}", "fallback occured in saving farmer bank account details with id : " + id);
 		return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
 	}
@@ -516,38 +508,47 @@ public class UserController {
 		messageSenderToRabbit.produceMsg(message);
 		return "Done";
 	}
-	
+
 	@ApiOperation(value = "To update farmer's password")
 	@ApiResponses(value = { @ApiResponse(code = 200, message = "Successfully updated the farmer's details"),
 			@ApiResponse(code = 401, message = "You are not authorized to view the resource"),
 			@ApiResponse(code = 403, message = "Accessing the resource you were trying to reach is forbidden"),
 			@ApiResponse(code = 404, message = "The resource you were trying to reach is not found") })
-	@PutMapping("/farmer/forgot")
-	public ResponseEntity<HttpStatus> farmerUpdatePassword(@RequestBody Map<String,String> farmerdetails) {
-		Optional<FarmerBean> farmer=farmerRepository.findById(farmerdetails.get("kkdFarmId"));
-		if(farmer.isPresent()) {
-			String currentPassword=farmerdetails.get("current");
-			String newPassword=farmerdetails.get("new");
-			if(farmer.get().getPassword().equals(farmerdetails.get("current"))){
+	@PutMapping("/farmer/updatePassword")
+	public ResponseEntity<Boolean> farmerUpdatePassword(@RequestBody PasswordChangeBean passwordChange) {
+		Optional<FarmerBean> farmer = farmerRepository.findById(passwordChange.getUserId());
+		if (farmer.isPresent()) {
+			String currentPassword = passwordChange.getCurrentPassword();
+			String newPassword = passwordChange.getNewPassword();
+			if (farmer.get().getPassword().equals(currentPassword)) {
 				farmer.get().setPassword(newPassword);
-				
+				farmerRepository.save(farmer.get());
+				return ResponseEntity.status(HttpStatus.OK).body(true);
 			}
+			return ResponseEntity.status(HttpStatus.OK).body(false);
 		}
-		return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+		return ResponseEntity.status(HttpStatus.NO_CONTENT).body(false);
 	}
-	
-	
+
 	@ApiOperation(value = "To update customer password")
 	@ApiResponses(value = { @ApiResponse(code = 200, message = "Successfully updated the customer details"),
 			@ApiResponse(code = 401, message = "You are not authorized to view the resource"),
 			@ApiResponse(code = 403, message = "Accessing the resource you were trying to reach is forbidden"),
 			@ApiResponse(code = 404, message = "The resource you were trying to reach is not found") })
-	@PutMapping("/customer/forgot")
-	public ResponseEntity<String> customerUpdatePassword(String id,
-			BankDetailsBean bankDetailsBean) {
-		return ResponseEntity.status(HttpStatus.OK).body(null);
+	@PutMapping("/customer/updatePassword")
+	public ResponseEntity<Boolean> customerUpdatePassword(@RequestBody PasswordChangeBean passwordChange) {
+		Optional<CustomerBean> customer = customerRepository.findById(passwordChange.getUserId());
+		if (customer.isPresent()) {
+			String currentPassword = passwordChange.getCurrentPassword();
+			String newPassword = passwordChange.getNewPassword();
+			if (customer.get().getPassword().equals(currentPassword)) {
+				customer.get().setPassword(newPassword);
+				customerRepository.save(customer.get());
+				return ResponseEntity.status(HttpStatus.OK).body(true);
+			}
+			return ResponseEntity.status(HttpStatus.OK).body(false);
+		}
+		return ResponseEntity.status(HttpStatus.NO_CONTENT).body(false);
 	}
-	
-	
-	
+
 }
