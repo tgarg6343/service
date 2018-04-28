@@ -104,13 +104,13 @@ public class UserDetailsControllerTest {
 	@Test
 	public void updateFarmerTest() throws Exception {
 		// farmerRepository.save to respond back with mockFarmer
-
+		Mockito.when(farmerRepository.findById(Mockito.anyString())).thenReturn(farmerBeanOptional);
 		Mockito.when(farmerRepository.save(Mockito.any(FarmerBean.class))).thenReturn(mockFarmer);
 		RequestBuilder requestBuilder = MockMvcRequestBuilders.put("/farmer/update/user/KkdFarm1001")
 				.accept(MediaType.APPLICATION_JSON).content(exampleFarmerJson).contentType(MediaType.APPLICATION_JSON);
 		MvcResult result = mockMvc.perform(requestBuilder).andReturn();
 		MockHttpServletResponse response = result.getResponse();
-		assertEquals(HttpStatus.CONFLICT.value(), response.getStatus());
+		assertEquals(HttpStatus.OK.value(), response.getStatus());
 	}
 
 	/*
@@ -120,12 +120,13 @@ public class UserDetailsControllerTest {
 	@Test
 	public void updateFarmerNegTest() throws Exception {
 		// farmerRepository.save to respond back with mockFarmer
-
+		Mockito.when(farmerRepository.findById(Mockito.anyString())).thenReturn(farmerBeanOptional);
 		Mockito.when(farmerRepository.save(Mockito.any(FarmerBean.class))).thenReturn(mockFarmer);
 		RequestBuilder requestBuilder = MockMvcRequestBuilders.put("/farmer/update/user/KkdFarm1001")
 				.accept(MediaType.APPLICATION_JSON).content(exampleFarmerJson).contentType(MediaType.APPLICATION_JSON);
 		MvcResult result = mockMvc.perform(requestBuilder).andReturn();
 		MockHttpServletResponse response = result.getResponse();
+		System.out.println("---------------------------------------"+result);
 		assertNotEquals(HttpStatus.ACCEPTED.value(), response.getStatus());
 	}
 

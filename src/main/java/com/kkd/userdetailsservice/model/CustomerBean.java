@@ -34,12 +34,10 @@ public class CustomerBean {
 	private String role;
 	@ApiModelProperty(notes = "Bank bean used to store bank data")
 	private BankDetailsBean bankDetails;
-	
 
 	public CustomerBean() {
 		super();
 	}
-
 
 	public CustomerBean(String kkdCustId, String mobileNo, String password, String firstName, String lastName,
 			List<AddressBean> addresses, AddressBean primaryAddress, String role, BankDetailsBean bankDetails) {
@@ -55,96 +53,77 @@ public class CustomerBean {
 		this.bankDetails = bankDetails;
 	}
 
-
 	public String getKkdCustId() {
 		return kkdCustId;
 	}
-
 
 	public void setKkdCustId(String kkdCustId) {
 		this.kkdCustId = kkdCustId;
 	}
 
-
 	public String getMobileNo() {
 		return mobileNo;
 	}
-
 
 	public void setMobileNo(String mobileNo) {
 		this.mobileNo = mobileNo;
 	}
 
-
 	public String getPassword() {
 		return password;
 	}
-
 
 	public void setPassword(String password) {
 		this.password = password;
 	}
 
-
 	public String getFirstName() {
 		return firstName;
 	}
-
 
 	public void setFirstName(String firstName) {
 		this.firstName = firstName;
 	}
 
-
 	public String getLastName() {
 		return lastName;
 	}
-
 
 	public void setLastName(String lastName) {
 		this.lastName = lastName;
 	}
 
-
 	public List<AddressBean> getAddresses() {
 		return addresses;
 	}
-
 
 	public void setAddresses(List<AddressBean> addresses) {
 		this.addresses = addresses;
 	}
 
-
 	public AddressBean getPrimaryAddress() {
 		return primaryAddress;
 	}
-
 
 	public void setPrimaryAddress(AddressBean primaryAddress) {
 		this.primaryAddress = primaryAddress;
 	}
 
-
 	public String getRole() {
 		return role;
 	}
-
 
 	public void setRole(String role) {
 		this.role = role;
 	}
 
-
 	public BankDetailsBean getBankDetails() {
 		return bankDetails;
 	}
 
-
 	public void setBankDetails(BankDetailsBean bankDetails) {
 		this.bankDetails = bankDetails;
 	}
-
 
 	@Override
 	public String toString() {
@@ -153,5 +132,4 @@ public class CustomerBean {
 				+ ", primaryAddress=" + primaryAddress + ", role=" + role + ", bankDetails=" + bankDetails + "]";
 	}
 
-	
 }

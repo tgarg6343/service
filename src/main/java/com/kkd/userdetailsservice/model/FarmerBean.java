@@ -156,6 +156,4 @@ public class FarmerBean {
 				+ role + ", bankDetails=" + bankDetails + "]";
 	}
 
-	
-
 }
